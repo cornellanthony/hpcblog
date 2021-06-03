@@ -24,7 +24,8 @@ class PipelineStack(core.Stack):
                                         "python -m pip install -r requirements.txt"
                                     ]),
                                 build=dict(commands=[
-                                    "npx cdk synth -o dist"])),
+                                    "npx cdk synth -o dist",
+                                    "ls -l dist/"])),
                             artifacts={
                                 "base-directory": "dist",
                                 "files": [

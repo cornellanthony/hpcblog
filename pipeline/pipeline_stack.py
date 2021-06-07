@@ -7,8 +7,7 @@ from aws_cdk import (core, aws_codebuild as codebuild,
 
 class PipelineStack(core.Stack):
 
-    def __init__(self, scope: core.Construct, id: str, *, repo_name: str=None,
-                 lambda_code: lambda_.CfnParametersCode=None, **kwargs) -> None:
+    def __init__(self, scope: core.Construct, id: str, *, repo_name: str=None, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
         
         # Example automatically generated without compilation. See https://github.com/aws/jsii/issues/826

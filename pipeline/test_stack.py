@@ -2,7 +2,7 @@ from pipeline.pipeline_stack import PipelineStack
 from aws_cdk import core, aws_batch as batch, aws_ecr as ecr, aws_ecs as ecs
 
 
-class BatchStack(core.Stack):
+class TestStack(core.Stack):
   def __init__(self, app: core.App, id: str, vpc, **kwargs):
     super().__init__(app, id, **kwargs)
     

@@ -35,7 +35,8 @@ class PipelineStack(core.Stack):
                             artifacts={
                                 "base-directory": "dist",
                                 "files": [
-                                    "BatchStack.template.json"]},
+                                    "BatchStack.template.json",
+                                    "TestStack.template.json"]},
                             environment=dict(buildImage=
                                 codebuild.LinuxBuildImage.STANDARD_2_0))))
 
@@ -61,7 +62,19 @@ class PipelineStack(core.Stack):
                             input=source_output,
                             outputs=[batch_build_output]),
                         ]),
-                codepipeline.StageProps(stage_name="Deploy",
+                codepipeline.StageProps(stage_name="Test",
+                    actions=[
+                        codepipeline_actions.CloudFormationCreateUpdateStackAction(
+                              action_name="Batch_CFN_Deploy",
+                              template_path=batch_build_output.at_path(
+                                  "TestStack.template.json"
+                              ),
+                              stack_name="TestDeployStack",
+                              admin_permissions=True,
+                              extra_inputs=[batch_build_output]
+                              )]
+                            ),
+                codepipeline.StageProps(stage_name="FinalStack",
                     actions=[
                         codepipeline_actions.CloudFormationCreateUpdateStackAction(
                               action_name="Batch_CFN_Deploy",
@@ -72,10 +85,10 @@ class PipelineStack(core.Stack):
                               admin_permissions=True,
                               extra_inputs=[batch_build_output]
                               )]
-                            )
+                            )  
                 ]
             )
 
-        core.Tag.add(vpc, "Project", "Batch Custom AMI VPC")
-        core.Tag.add(code,"Project", "Batch Custom AMI Code")
-        core.Tag.add(batch_build, "Project", "Batch Custom ami build")
+        # core.Tag.add(vpc, "Project", "Batch Custom AMI VPC")
+        # core.Tag.add(code,"Project", "Batch Custom AMI Code")
+        # core.Tag.add(batch_build, "Project", "Batch Custom ami build")

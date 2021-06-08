@@ -26,6 +26,6 @@ class TestStack(core.Stack):
 
     # Example automatically generated without compilation. See https://github.com/aws/jsii/issues/82
     batch.JobDefinition(self, "MyJobDef",
-        job_definition_name="MyCDKJobDef",
+        job_definition_name="MyCDKJobDefinition",
         container=batch.JobDefinitionContainer(image=ecs.ContainerImage.from_registry("amazon/amazonlinux2"),command=["sleep", "900"],memory_limit_mib=1024, vcpus=256),
     ) 

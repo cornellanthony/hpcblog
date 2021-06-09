@@ -32,7 +32,6 @@ class PipelineStack(core.Stack):
         # custom_policy_document = _iam.PolicyDocument.from_json(json.dumps(json.dumps(packer_policy))
         # my_policy = _iam.PolicyDocument(self, "PolicyDocument", statements=packer_policy)
         codebuild_managed_policy = _iam.ManagedPolicy(self, "CodeBuildManagedPolicy",document=antcorn,managed_policy_name="CodeBuildPolicy")
-        
         #Instance for packer tool 
         instance_role = _iam.Role(self, "PackerInstanceRole",
                         assumed_by=_iam.ServicePrincipal("ec2.amazonaws.com"),
@@ -40,7 +39,8 @@ class PipelineStack(core.Stack):
         #CodeBuild Role with packer policy.
         codebuild_role = _iam.Role(self,"CodeBuildRole",
                             assumed_by=_iam.ServicePrincipal("codebuild.amazonaws.com"),
-                            managed_policies=[_iam.ManagedPolicy.from_aws_managed_policy_name("AWSCodeBuildAdminAccess")
+                            managed_policies=[_iam.ManagedPolicy.from_aws_managed_policy_name("AWSCodeBuildAdminAccess"),
+                                              _iam.ManagedPolicy.from_managed_policy_name(self, "ManagedPolicyCodeBuild", managed_policy_name="CodeBuildPolicy")
                                                ])
      
         #CodeBuild Project to build custom AMI using packer tool. 

@@ -19,9 +19,9 @@ phases:
       - echo "\e[0;33m Install cfn_nag_scan and cfn-lint ClodFormation utilites for security scan and validation of templates test and pilot templates"
       - pip install cfn-lint && gem install cfn-nag
       - echo "\e[0;33m ** CloudFormation templates validation check **"
-      - cfn-lint templates/pilot-template.yaml templates/test-template.yaml && echo "\e[0;32m ********* Template validation looks good *********"
+      - cfn-lint cdk.out/BatchStack.template.json cdk.out/TestStack.template.json && echo "\e[0;32m ********* Template validation looks good *********"
       - echo "\e[0;33m ** ClodFormation templates security level check **"
-      - cfn_nag_scan --input-path templates/pilot-template.yaml templates/test-template.yaml && echo "\e[0;32m ********* Template scanning looks good *********"
+      - cfn_nag_scan --input-path cdk.out/BatchStack.template.json cdk.out/TestStack.template.json && echo "\e[0;32m ********* Template scanning looks good *********"
       # - export AWS_POLL_DELAY_SECONDS=30
       # - export AWS_MAX_ATTEMPTS=1000
       # Install latest version of packer version.

@@ -71,7 +71,7 @@
           "type": "shell",
           "execute_command": "echo 'packer' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'",
           "expect_disconnect": true,
-          "script": "{{template_dir}}/custom-package-script.sh"
+          "script": "{{template_dir}}/packer/custom-package-script.sh"
         }
     ]
 }

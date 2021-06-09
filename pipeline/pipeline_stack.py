@@ -3,7 +3,8 @@ from aws_cdk import (core, aws_codebuild as codebuild,
                      aws_codepipeline as codepipeline,
                      aws_codepipeline_actions as codepipeline_actions,
                      aws_ec2 as ec2, 
-                     aws_lambda as lambda_)
+                     aws_lambda as lambda_,
+                     aws_iam as _iam)
 
 class PipelineStack(core.Stack):
 
@@ -18,13 +19,23 @@ class PipelineStack(core.Stack):
 
         code = codecommit.Repository.from_repository_name(self, "ImportedRepo",
                   repo_name)
-
+        # Read CodeBuild buildspec.yaml file. 
         with open ("packer/buildspec.yml", "r") as myfile:
             data=myfile.read()
 
+        #Instance for packer tool 
+        instance_role = _iam.Role(self, "PackerInstanceRole",
+                        assumed_by=_iam.ServicePrincipal("ec2.amazonaws.com"))
+        instance_role.add_managed_policy(_iam.ManagedPolicy.from_aws_managed_policy_name("AmazonS3ReadOnlyAccess"))
+
+        #CodeBuild Project to build custom AMI using packer tool. 
         custom_ami_build = codebuild.PipelineProject(self, "CustomAMIBuild",
                         build_spec=codebuild.BuildSpec.from_source_filename(data),
-                        environment=dict(build_image=codebuild.LinuxBuildImage.AMAZON_LINUX_2_3))
+                        environment_variables={"NAMETAG": codebuild.BuildEnvironmentVariable(value="Ver1"),
+                                                "VPCID": codebuild.BuildEnvironmentVariable(value=vpc.vpc_id),
+                                                "SubnetIds":codebuild.BuildEnvironmentVariable(value=vpc.private_subnets.pop()),
+                                                "InstanceIAMRole":codebuild.BuildEnvironmentVariable(value=instance_role)},
+                        environment=dict(build_image=codebuild.LinuxBuildImage.from_code_build_image_id("aws/codebuild/standard:5.0")))
         # custom_ami_build = codebuild.PipelineProject(self, "CustomAMIBuild",
         #                 build_spec=codebuild.BuildSpec.from_object(dict(
         #                     version="0.2",

@@ -27,7 +27,6 @@ class PipelineStack(core.Stack):
         instance_role = _iam.Role(self, "PackerInstanceRole",
                         assumed_by=_iam.ServicePrincipal("ec2.amazonaws.com"))
         instance_role.add_managed_policy(_iam.ManagedPolicy.from_aws_managed_policy_name("AmazonS3ReadOnlyAccess"))
-
         #CodeBuild Project to build custom AMI using packer tool. 
         custom_ami_build = codebuild.PipelineProject(self, "CustomAMIBuild",
                         build_spec=codebuild.BuildSpec.from_source_filename(data),

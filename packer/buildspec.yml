@@ -21,8 +21,9 @@ phases:
       - apt-get install build-essential
   build:
     commands:
-      - packer validate --var aws_region=$AWS_DEFAULT_REGION --var aws_ami_name=$AMI_Version --var arch=$arch --var source_ami_owners=$source_ami_owners --var name_tag=$NAMETAG packer/packer-template.json
-      - packer build --var aws_region=$AWS_DEFAULT_REGION --var aws_ami_name=$AMI_Version --var arch=$arch --var source_ami_owners=$source_ami_owners --var name_tag=$NAMETAG packer/packer-template.json
+      - ls -ltrh
+      - packer validate --var aws_region=$AWS_DEFAULT_REGION --var aws_ami_name=$AMI_Version --var arch=$arch --var source_ami_owners=$source_ami_owners --var name_tag=$NAMETAG packer-template.json
+      - packer build --var aws_region=$AWS_DEFAULT_REGION --var aws_ami_name=$AMI_Version --var arch=$arch --var source_ami_owners=$source_ami_owners --var name_tag=$NAMETAG packer-template.json
   post_build:
     commands:
       - export AMIID=$(aws ec2 describe-images --filters "Name=name,Values=$AMI_Version" --query 'Images[*].[ImageId]' --output text)

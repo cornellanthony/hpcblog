@@ -2,6 +2,7 @@ from aws_cdk import (core, aws_codebuild as codebuild,
                      aws_codecommit as codecommit,
                      aws_codepipeline as codepipeline,
                      aws_codepipeline_actions as codepipeline_actions,
+
                      aws_ec2 as ec2, 
                      aws_lambda as lambda_,
                      aws_iam as _iam)

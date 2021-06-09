@@ -19,7 +19,6 @@ pipeline_stack = PipelineStack(app, "PipelineCustomAMIStack", repo_name=CODECOMM
 
 test_stack = TestStack(app, "TestStack", vpc=pipeline_stack.vpc)
 batch_stack = BatchStack(app, "BatchStack", vpc=pipeline_stack.vpc)
-
 core.Tag.add(app, key="Project", value="Batch Custom AMI Resource")
 
 app.synth()

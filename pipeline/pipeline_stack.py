@@ -95,13 +95,13 @@ class PipelineStack(core.Stack):
                             project=batch_build,
                             input=source_output,
                             run_order=2,
-                            outputs=[batch_build_output]),
-                        codepipeline_actions.CodeBuildAction(
-                            action_name="CustomAMI_Build",
-                            project=custom_ami_build,
-                            run_order=1,
-                            input=source_output,
-                            outputs=[custom_ami_build_output])
+                            outputs=[batch_build_output])
+                        # codepipeline_actions.CodeBuildAction(
+                        #     action_name="CustomAMI_Build",
+                        #     project=custom_ami_build,
+                        #     run_order=1,
+                        #     input=source_output,
+                        #     outputs=[custom_ami_build_output])
                         ]),
                 codepipeline.StageProps(stage_name="Test",
                     actions=[

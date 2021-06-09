@@ -19,6 +19,41 @@ class PipelineStack(core.Stack):
         code = codecommit.Repository.from_repository_name(self, "ImportedRepo",
                   repo_name)
 
+        with open ("packer/buildspec.yml", "r") as myfile:
+            data=myfile.read()
+
+        custom_ami_build = codebuild.PipelineProject(self, "CustomAMIBuild",
+                        build_spec=codebuild.BuildSpec.from_source_filename(data),
+                        environment=dict(build_image=codebuild.LinuxBuildImage.AMAZON_LINUX_2_3))
+        # custom_ami_build = codebuild.PipelineProject(self, "CustomAMIBuild",
+        #                 build_spec=codebuild.BuildSpec.from_object(dict(
+        #                     version="0.2",
+        #                     env=(dict(
+        #                         exported-variables=["AMI_Version", "AMIID"], 
+        #                         variables=dict(arch="x86_64",
+        #                                         source_ami_owners="amazon",
+        #                                         AWS_POLL_DELAY_SECONDS=30,
+        #                                         AWS_MAX_ATTEMPTS=1000))),
+        #                     phases=dict(
+        #                         pre_build=dict(
+        #                             commands=[
+        #                                 "export AMI_Version=Batch-$VersionTag-v$(date +'%F-%H-%M')",
+        #                                 "export AWS_POLL_DELAY_SECONDS=30",
+        #                                 "export AWS_MAX_ATTEMPTS=1000",
+        #                                 "curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -",
+        #                                 "apt-add-repository \"deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main\"",
+        #                                 "apt-get update && apt-get install packer",
+        #                                 "apt-get install build-essential",
+        #                             ]),
+        #                         build=dict(commands=[
+        #                             "packer validate --var aws_region=$AWS_DEFAULT_REGION --var aws_ami_name=$AMI_Version --var arch=$arch --var source_ami_owners=$source_ami_owners --var name_tag=$NAMETAG packer/packer-template.json",
+        #                             "packer build --var aws_region=$AWS_DEFAULT_REGION --var aws_ami_name=$AMI_Version --var arch=$arch --var source_ami_owners=$source_ami_owners --var name_tag=$NAMETAG packer/packer-template.json"]),
+        #                         post_build=dict(command=[
+        #                             "export AMIID=$(aws ec2 describe-images --filters \"Name=name,Values=$AMI_Version\" --query 'Images[*].[ImageId]' --output text)"
+        #                         ])),
+        #                     environment=dict(buildImage=
+        #                         codebuild.LinuxBuildImage.STANDARD_2_0))))
+
         batch_build = codebuild.PipelineProject(self, "BatchBuild",
                         build_spec=codebuild.BuildSpec.from_object(dict(
                             version="0.2",
@@ -43,7 +78,7 @@ class PipelineStack(core.Stack):
 
         source_output = codepipeline.Artifact()
         batch_build_output = codepipeline.Artifact("BatchBuildOutput")
-
+        custom_ami_build_output = codepipeline.Artifact("CustomAMIBuildOutput")
 
         codepipeline.Pipeline(self, "Pipeline",
             stages=[
@@ -61,6 +96,11 @@ class PipelineStack(core.Stack):
                             project=batch_build,
                             input=source_output,
                             outputs=[batch_build_output]),
+                        codepipeline_actions.CodeBuildAction(
+                            action_name="CustomAMI_Build",
+                            project=custom_ami_build,
+                            input=source_output,
+                            outputs=[custom_ami_build_output])
                         ]),
                 codepipeline.StageProps(stage_name="Test",
                     actions=[

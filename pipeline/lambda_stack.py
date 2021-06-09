@@ -22,3 +22,4 @@ class LambdaStack(core.Stack):
         deployment_config=
             codedeploy.LambdaDeploymentConfig.LINEAR_10_PERCENT_EVERY_1_MINUTE
     )
+    

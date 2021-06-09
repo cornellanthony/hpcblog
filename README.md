@@ -56,3 +56,11 @@ command.
  * `cdk docs`        open CDK documentation
 
 Enjoy!
+
+## Steps to get started.
+
+Clone the repo
+```bash
+git clone 
+
+```

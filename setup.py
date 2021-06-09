@@ -6,7 +6,7 @@ with open("README.md") as fp:
 
 
 setuptools.setup(
-    name="cdk",
+    name="pipeline",
     version="0.0.1",
 
     description="An empty CDK Python app",
@@ -15,11 +15,11 @@ setuptools.setup(
 
     author="author",
 
-    package_dir={"": "cdk"},
-    packages=setuptools.find_packages(where="cdk"),
+    package_dir={"": "pipeline"},
+    packages=setuptools.find_packages(where="pipeline"),
 
     install_requires=[
-        "aws-cdk.core==1.91.0",
+        "aws-cdk.core==1.106.1",
     ],
 
     python_requires=">=3.6",
@@ -28,8 +28,6 @@ setuptools.setup(
         "Development Status :: 4 - Beta",
 
         "Intended Audience :: Developers",
-
-        "License :: OSI Approved :: Apache Software License",
 
         "Programming Language :: JavaScript",
         "Programming Language :: Python :: 3 :: Only",

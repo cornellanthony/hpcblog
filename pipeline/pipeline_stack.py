@@ -46,6 +46,7 @@ class PipelineStack(core.Stack):
      
         #CodeBuild Project to build custom AMI using packer tool. 
         custom_ami_build = codebuild.PipelineProject(self, "CustomAMIBuild",
+                        role=codebuild_role,
                         build_spec=codebuild.BuildSpec.from_source_filename(build_spec),
                         environment_variables={"NAMETAG": codebuild.BuildEnvironmentVariable(value="Ver1"),
                                                 "VPCID": codebuild.BuildEnvironmentVariable(value=vpc.vpc_id),
@@ -95,13 +96,13 @@ class PipelineStack(core.Stack):
                             project=batch_build,
                             input=source_output,
                             run_order=2,
-                            outputs=[batch_build_output])
-                        # codepipeline_actions.CodeBuildAction(
-                        #     action_name="CustomAMI_Build",
-                        #     project=custom_ami_build,
-                        #     run_order=1,
-                        #     input=source_output,
-                        #     outputs=[custom_ami_build_output])
+                            outputs=[batch_build_output]),
+                        codepipeline_actions.CodeBuildAction(
+                            action_name="CustomAMI_Build",
+                            project=custom_ami_build,
+                            run_order=1,
+                            input=source_output,
+                            outputs=[custom_ami_build_output])
                         ]),
                 codepipeline.StageProps(stage_name="Test",
                     actions=[

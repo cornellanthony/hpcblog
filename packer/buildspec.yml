@@ -21,7 +21,6 @@ phases:
       - apt-get install build-essential
   build:
     commands:
-      - ls -ltrh
       - packer validate --var aws_region=$AWS_DEFAULT_REGION --var aws_ami_name=$AMI_Version --var arch=$arch --var source_ami_owners=$source_ami_owners --var name_tag=$NAMETAG packer/packer-template.json
       - packer build --var aws_region=$AWS_DEFAULT_REGION --var aws_ami_name=$AMI_Version --var arch=$arch --var source_ami_owners=$source_ami_owners --var name_tag=$NAMETAG packer/packer-template.json
   post_build:

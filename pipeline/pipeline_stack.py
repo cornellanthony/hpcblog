@@ -34,8 +34,7 @@ class PipelineStack(core.Stack):
         #Convert policy into dictonary format. 
         codebuild_packer_policy = json.loads(packer_policy)
         codebuild_policy_doc = _iam.PolicyDocument.from_json(codebuild_packer_policy)
-        # custom_policy_document = _iam.PolicyDocument.from_json(json.dumps(json.dumps(packer_policy))
-        # my_policy = _iam.PolicyDocument(self, "PolicyDocument", statements=packer_policy)
+        
         codebuild_managed_policy = _iam.ManagedPolicy(self, "CodeBuildManagedPolicy",document=codebuild_policy_doc,managed_policy_name="CodeBuildPolicy")
         #Instance for packer tool 
         instance_role = _iam.Role(self, "PackerInstanceRole",
@@ -128,7 +127,7 @@ class PipelineStack(core.Stack):
                               stack_name="TestDeployStack",
                               parameter_overrides={"ImageId":"#BuildVariables:AMIID","Environment":"#{BuildVariables.AMI_Version}","VersionTag":"${VersionTag}"},
                               admin_permissions=True,
-                              extra_inputs=[batch_build_output]
+                              extra_inputs=[custom_ami_build_output,batch_build_output]
                               )]
                             ),
                 codepipeline.StageProps(stage_name="FinalStack",
@@ -143,9 +142,9 @@ class PipelineStack(core.Stack):
                               ),
                               run_order=2,
                               stack_name="BatchDeployStack",
-                              
+                              parameter_overrides={"ImageId":"#BuildVariables:AMIID","Environment":"#{BuildVariables.AMI_Version}","VersionTag":"${VersionTag}"},
                               admin_permissions=True,
-                              extra_inputs=[batch_build_output]
+                              extra_inputs=[custom_ami_build_output,batch_build_output]
                               )]
                             )  
                 ]

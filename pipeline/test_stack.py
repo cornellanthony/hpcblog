@@ -14,10 +14,10 @@ class TestStack(core.Stack):
     super().__init__(app, id, **kwargs)
     
     #Parameters
-    ImageId = core.CfnParameter(self, "AMIID", type="String", 
+    ImageId = core.CfnParameter(self, "ImageId", type="String", 
                           description="This is Custom AMI ID")
 
-    Environment = core.CfnParameter(self, "MyEnvironment", type="String", 
+    Environment = core.CfnParameter(self, "Environment", type="String", 
                           description="This is Custom AMI ID")
 
     VersionTag = core.CfnParameter(self, "VersionTag", type="String", 

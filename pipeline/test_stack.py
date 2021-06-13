@@ -38,9 +38,10 @@ class TestStack(core.Stack):
     my_compute_environment = batch.ComputeEnvironment(self, "AWS-Managed-Compute-Env",
         compute_resources={
             # "lauch_template": { "lauch_template"}
-            "launch_template": { "launch_template_id" : my_launch_template.launch_template_name },
+            "launch_template": { "launch_template_name" : my_launch_template.launch_template_name },
             "vpc": vpc
-        }
+        },
+        compute_environment_name=Environment.value_as_string
     )
     
     # Example automatically generated without compilation. See https://github.com/aws/jsii/issues/826

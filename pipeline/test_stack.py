@@ -27,13 +27,15 @@ class TestStack(core.Stack):
     core.CfnOutput(self, "ImageId1", value=ImageId.value_as_string)
     with open ("packer/user_data.txt", "r") as myfile:
             userdata=myfile.read()
-
-    my_custom_ami=ec2.MachineImage.generic_linux({"us-east-2":ImageId.value_as_string})
+    
+    # my_launch_data=ec2.CfnLaunchTemplate.LaunchTemplateDataProperty(image_id=ImageId.value_as_string,)
     my_launch_template = ec2.CfnLaunchTemplate(self, "BatchLaunchTemplate", launch_template_name="batch-template",
-                                               launch_template_data={
-                                                   "image_id": my_custom_ami,
-                                                   "user_data": ec2.UserData.custom(userdata)
-                                               })
+                                               launch_template_data=ec2.CfnLaunchTemplate.LaunchTemplateDataProperty(
+                                                   image_id=ImageId.value_as_string,
+                                                   user_data=userdata
+                                               )
+                                               )
+    
     # my_launch_template = ec2.LaunchTemplate(self, "MyLaunchTemplate", user_data=ec2.UserData.custom(userdata), machine_image=my_custom_ami)
     # default is managed
     my_compute_environment = batch.ComputeEnvironment(self, "AWS-Managed-Compute-Env",

@@ -20,8 +20,8 @@ class TestStack(core.Stack):
     Environment = core.CfnParameter(self, "Environment", type="String", 
                           description="This is Custom AMI ID")
 
-    VersionTag = core.CfnParameter(self, "VersionTag", type="String", 
-                          description="This is Custom AMI ID")
+    # VersionTag = core.CfnParameter(self, "VersionTag", type="String", 
+    #                       description="This is Custom AMI ID")
     
     # print(ImageId.value_as_string)
     core.CfnOutput(self, "ImageId1", value=ImageId.value_as_string)

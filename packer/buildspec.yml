@@ -9,7 +9,6 @@ env:
     - AMI_Version
     - AMIID
     - PROD_ENV
-    # - VersionTag
 phases:
   pre_build:
     commands:

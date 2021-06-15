@@ -53,14 +53,8 @@ class PipelineStack(core.Stack):
         #CodeBuild Project to build custom AMI using packer tool. 
         custom_ami_build = codebuild.PipelineProject(self, "CustomAMIBuild",
                         role=codebuild_role,
-                        # vpc=vpc.vpc_id,
-                        # # security_groups=ec2.SecurityGroup(self, "CustomVPCSG", allow_all_outbound="true"),
-                        # # subnet_selection=myprivate_subnet.subnet_ids[0],
                         build_spec=codebuild.BuildSpec.from_source_filename(build_spec),
                         environment_variables={"NAMETAG": codebuild.BuildEnvironmentVariable(value="BatchAMI1"),
-                                               "VersionTag": codebuild.BuildEnvironmentVariable(value="v114"),
-                                                # "VPCID": codebuild.BuildEnvironmentVariable(value=vpc.vpc_id),
-                                                # "SubnetIds":codebuild.BuildEnvironmentVariable(value=myprivate_subnet.subnet_ids[0]),
                                                 "InstanceIAMRole":codebuild.BuildEnvironmentVariable(value=instance_profile.instance_profile_name)},
                         environment=dict(build_image=codebuild.LinuxBuildImage.from_code_build_image_id("aws/codebuild/standard:5.0")))
 
@@ -82,8 +76,7 @@ class PipelineStack(core.Stack):
                                 "files": [
                                     "BatchStack.template.json",
                                     "TestStack.template.json"]},
-                            environment=dict(buildImage=
-                                codebuild.LinuxBuildImage.STANDARD_2_0))))
+                            environment=dict(buildImage=codebuild.LinuxBuildImage.STANDARD_2_0))))
 
 
         source_output = codepipeline.Artifact()
@@ -125,7 +118,7 @@ class PipelineStack(core.Stack):
                               ),
                               run_order=1,
                               stack_name="TestDeployStack",
-                              parameter_overrides={"ImageId":"#BuildVariables:AMIID","Environment":"#{BuildVariables.AMI_Version}","VersionTag":"${VersionTag}"},
+                              parameter_overrides={"ImageId":"#BuildVariables.AMIID","Environment":"#{BuildVariables.AMI_Version}","VersionTag":"#{BuildVariables.VersionTag"},
                               admin_permissions=True,
                               extra_inputs=[custom_ami_build_output,batch_build_output]
                               )]
@@ -142,7 +135,7 @@ class PipelineStack(core.Stack):
                               ),
                               run_order=2,
                               stack_name="BatchDeployStack",
-                              parameter_overrides={"ImageId":"#BuildVariables:AMIID","Environment":"#{BuildVariables.AMI_Version}","VersionTag":"${VersionTag}"},
+                              parameter_overrides={"ImageId":"#BuildVariables.AMIID","Environment":"#{BuildVariables.AMI_Version}","VersionTag":"#{BuildVariables.VersionTag"},
                               admin_permissions=True,
                               extra_inputs=[custom_ami_build_output,batch_build_output]
                               )]

@@ -20,15 +20,13 @@ class TestStack(core.Stack):
     Environment = core.CfnParameter(self, "Environment", type="String", 
                           description="This is Custom AMI ID")
 
-    # VersionTag = core.CfnParameter(self, "VersionTag", type="String", 
-    #                       description="This is Custom AMI ID")
-    
-    # print(ImageId.value_as_string)
+
     core.CfnOutput(self, "ImageId1", value=ImageId.value_as_string)
+
     with open ("packer/user_data.txt", "r") as myfile:
             userdata=myfile.read()
     
-    # my_launch_data=ec2.CfnLaunchTemplate.LaunchTemplateDataProperty(image_id=ImageId.value_as_string,)
+
     my_launch_template = ec2.CfnLaunchTemplate(self, "BatchLaunchTemplate", launch_template_name="batch-template",
                                                launch_template_data=ec2.CfnLaunchTemplate.LaunchTemplateDataProperty(
                                                    image_id=ImageId.value_as_string,
@@ -36,12 +34,11 @@ class TestStack(core.Stack):
                                                )
                                                )
     
-    # my_launch_template = ec2.LaunchTemplate(self, "MyLaunchTemplate", user_data=ec2.UserData.custom(userdata), machine_image=my_custom_ami)
+
     # default is managed
     my_compute_environment = batch.ComputeEnvironment(self, "AWS-Managed-Compute-Env",
         compute_resources={
-            # "lauch_template": { "lauch_template"}
-            "launch_template": { "launch_template_name" : my_launch_template.launch_template_name },
+            "launch_template": { "launch_template_name" : my_launch_template.launch_template_name , "version":"$Latest"},
             "vpc": vpc
         },
         compute_environment_name=Environment.value_as_string

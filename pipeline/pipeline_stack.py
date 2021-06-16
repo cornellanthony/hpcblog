@@ -119,7 +119,7 @@ class PipelineStack(core.Stack):
                               ),
                               run_order=1,
                               stack_name="TestDeployStack",
-                              parameter_overrides={"ImageId":"#BuildVariables.AMIID","Environment":"#{BuildVariables.AMI_Version}"},
+                              parameter_overrides={"ImageId":"#{BuildVariables.AMIID}","Environment":"#{BuildVariables.AMI_Version}"},
                               admin_permissions=True,
                               extra_inputs=[custom_ami_build_output,batch_build_output]
                               )]
@@ -136,7 +136,7 @@ class PipelineStack(core.Stack):
                               ),
                               run_order=2,
                               stack_name="BatchDeployStack",
-                              parameter_overrides={"ImageId":"#BuildVariables.AMIID","Environment":"#{BuildVariables.AMI_Version}"},
+                              parameter_overrides={"ImageId":"#{BuildVariables.AMIID}","Environment":"#{BuildVariables.AMI_Version}"},
                               admin_permissions=True,
                               extra_inputs=[custom_ami_build_output,batch_build_output]
                               )]

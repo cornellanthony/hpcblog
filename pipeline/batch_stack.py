@@ -10,7 +10,7 @@ class BatchStack(core.Stack):
     ImageId = core.CfnParameter(self, "ImageId", type="String", 
                           description="This is Custom AMI ID")
 
-    PROD_ENV = core.CfnParameter(self, "PROD_ENV", type="String", 
+    MainEnv = core.CfnParameter(self, "MainEnv", type="String", 
                           description="Batch Compute Environment name")
 
     with open ("packer/user_data.txt", "r") as myfile:
@@ -31,7 +31,7 @@ class BatchStack(core.Stack):
             "launch_template": { "launch_template_name" : my_launch_template.launch_template_name , "version":"$Latest"},
             "vpc": vpc
         },
-        compute_environment_name=PROD_ENV.value_as_string
+        compute_environment_name=MainEnv.value_as_string
     )
     
     # Example automatically generated without compilation. See https://github.com/aws/jsii/issues/826

@@ -17,7 +17,7 @@ class TestStack(core.Stack):
     ImageId = core.CfnParameter(self, "ImageId", type="String", 
                           description="This is Custom AMI ID")
 
-    Environment = core.CfnParameter(self, "Environment", type="String", 
+    TestEnv = core.CfnParameter(self, "TestEnv", type="String", 
                           description="Batch Compute Environment name")
 
 
@@ -41,7 +41,7 @@ class TestStack(core.Stack):
             "launch_template": { "launch_template_name" : my_launch_template.launch_template_name , "version":"$Latest"},
             "vpc": vpc
         },
-        compute_environment_name=Environment.value_as_string
+        compute_environment_name=TestEnv.value_as_string
     )
     
     # Example automatically generated without compilation. See https://github.com/aws/jsii/issues/826

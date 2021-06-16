@@ -8,14 +8,16 @@ env:
   exported-variables:
     - AMI_Version
     - AMIID
-    - PROD_ENV
+    - MainEnv
+    - TestEnv
 phases:
   pre_build:
     commands:
       # Generate environment variables to use futher in pipeline. 
       - VersionTag=v$CODEBUILD_BUILD_NUMBER
       - export AMI_Version=AMI-v$CODEBUILD_BUILD_NUMBER-$(date +'%F')
-      - export PROD_ENV=Prod-$CODEBUILD_BUILD_NUMBER-v$(date +'%F-%H-%M')
+      - export TestEnv=Test-$CODEBUILD_BUILD_NUMBER-v$(date +'%F')
+      - export MainEnv=Main-$CODEBUILD_BUILD_NUMBER-v$(date +'%F')
       - curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
       - apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
       - apt-get update && apt-get install packer

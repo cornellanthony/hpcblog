@@ -18,7 +18,7 @@ class TestStack(core.Stack):
                           description="This is Custom AMI ID")
 
     Environment = core.CfnParameter(self, "Environment", type="String", 
-                          description="This is Custom AMI ID")
+                          description="Batch Compute Environment name")
 
 
     core.CfnOutput(self, "ImageId1", value=ImageId.value_as_string)

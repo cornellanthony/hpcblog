@@ -136,14 +136,10 @@ class PipelineStack(core.Stack):
                               ),
                               run_order=2,
                               stack_name="BatchDeployStack",
-                              parameter_overrides={"ImageId":"#{BuildVariables.AMIID}","Environment":"#{BuildVariables.AMI_Version}"},
+                              parameter_overrides={"ImageId":"#{BuildVariables.AMIID}","PROD_ENV":"#{BuildVariables.PROD_ENV}"},
                               admin_permissions=True,
                               extra_inputs=[custom_ami_build_output,batch_build_output]
                               )]
                             )  
                 ]
             )
-
-        # core.Tag.add(vpc, "Project", "Batch Custom AMI VPC")
-        # core.Tag.add(code,"Project", "Batch Custom AMI Code")
-        # core.Tag.add(batch_build, "Project", "Batch Custom ami build")

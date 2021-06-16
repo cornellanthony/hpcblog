@@ -17,7 +17,7 @@ class BatchStack(core.Stack):
             userdata=myfile.read()
     
 
-    my_launch_template = ec2.CfnLaunchTemplate(self, "BatchLaunchTemplate", launch_template_name="batch-template",
+    my_launch_template = ec2.CfnLaunchTemplate(self, "BatchLaunchTemplate", launch_template_name="batch-main-template",
                                                launch_template_data=ec2.CfnLaunchTemplate.LaunchTemplateDataProperty(
                                                    image_id=ImageId.value_as_string,
                                                    user_data=core.Fn.base64(userdata)

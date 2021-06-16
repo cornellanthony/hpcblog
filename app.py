@@ -7,6 +7,7 @@ from aws_cdk import core
 from pipeline.pipeline_stack import PipelineStack
 from pipeline.test_stack import TestStack
 from pipeline.batch_stack import BatchStack
+from pipeline.launchstack import MyProjectStack
 app = core.App()
 
 # lambda_stack = LambdaStack(app, "LambdaStack")
@@ -20,5 +21,6 @@ pipeline_stack = PipelineStack(app, "PipelineCustomAMIStack", repo_name=CODECOMM
 test_stack = TestStack(app, "TestStack", vpc=pipeline_stack.vpc)
 batch_stack = BatchStack(app, "BatchStack", vpc=pipeline_stack.vpc)
 core.Tag.add(app, key="Project", value="Batch Custom AMI Resource")
+launch_stack = MyProjectStack(app, "MyProjectStack")
 
 app.synth()

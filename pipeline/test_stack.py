@@ -32,7 +32,7 @@ class TestStack(core.Stack):
 
     # Example automatically generated without compilation. See https://github.com/aws/jsii/issues/82
     test_jobDef = batch.JobDefinition(self, "MyJobDef",
-        job_definition_name="MyCDKJobDef",
+        job_definition_name="MyCDKJobDefinition",
         container=batch.JobDefinitionContainer(image=ecs.ContainerImage.from_registry("amazon/amazonlinux2"),command=["sleep", "900"],memory_limit_mib=1024, vcpus=256),
     ) 
     self.task_job = _sfn_tasks.BatchSubmitJob(self, "Submit Job",
@@ -41,18 +41,10 @@ class TestStack(core.Stack):
         job_queue_arn=test_queue.job_queue_arn
     )
     
-    # self.Job_String_Split = _sfn.Task(
-    #         self,"String_Split",
-    #         # input_path = "$.TaskInfo",
-    #         # result_path = "$.JobDetail.String_Split",
-    #         # output_path = "$",
-    #         task = _sfn_tasks.RunBatchJob(
-    #             job_name = "String_Split",
-    #             job_definition = test_jobDef,
-    #             job_queue = test_queue,
-    #         )
-    #     )
+# SNS topic for publishing job status messages
     topic = sns.Topic(self, "Topic")
+
+    # definining tasks to publish to SNS
     self.task1 = _sfn_tasks.SnsPublish(self, "Publish_suceeded",
             topic=topic,
             message=_sfn.TaskInput.from_data_at("$.message")
@@ -63,9 +55,11 @@ class TestStack(core.Stack):
             message=_sfn.TaskInput.from_data_at("$.message")
         )
 
+    # Creating state machine
     self.statemachine = _sfn.StateMachine(
             self, "StateMachine",
-            definition = self.task_job.next(self.task1),
+            definition = self.task_job.next(_sfn.Choice(self, "Job Complete?").when(_sfn.Condition.string_equals("$.status", "FAILED"), self.task2).when(_sfn.Condition.string_equals("$.status", "SUCCEEDED"), self.task1)),
+            # next(self.task1),
         # catch_props={
         #     "ErrorEquals": [ "States.ALL" ],
         #     "Next": self.task2

@@ -5,6 +5,7 @@ from aws_cdk import (
     aws_batch as _batch,
     aws_stepfunctions_tasks as _sfn_tasks,
     aws_sns as sns,
+    aws_ec2 as ec2,
     core,
 )
 
@@ -12,12 +13,35 @@ class TestStack(core.Stack):
   def __init__(self, app: core.App, id: str, vpc, **kwargs):
     super().__init__(app, id, **kwargs)
     
+    #Parameters
+    ImageId = core.CfnParameter(self, "ImageId", type="String", 
+                          description="This is Custom AMI ID")
+
+    TestEnv = core.CfnParameter(self, "TestEnv", type="String", 
+                          description="Batch Compute Environment name")
+
+
+    core.CfnOutput(self, "ImageId1", value=ImageId.value_as_string)
+
+    with open ("packer/user_data.txt", "r") as myfile:
+            userdata=myfile.read()
+    
+
+    my_launch_template = ec2.CfnLaunchTemplate(self, "BatchLaunchTemplate", launch_template_name="batch-test-template",
+                                               launch_template_data=ec2.CfnLaunchTemplate.LaunchTemplateDataProperty(
+                                                   image_id=ImageId.value_as_string,
+                                                   user_data=core.Fn.base64(userdata)
+                                               )
+                                               )
+    
 
     # default is managed
     my_compute_environment = batch.ComputeEnvironment(self, "AWS-Managed-Compute-Env",
         compute_resources={
+            "launch_template": { "launch_template_name" : my_launch_template.launch_template_name , "version":"$Latest"},
             "vpc": vpc
-        }
+        },
+        compute_environment_name=TestEnv.value_as_string
     )
     
     # Example automatically generated without compilation. See https://github.com/aws/jsii/issues/826
@@ -32,7 +56,7 @@ class TestStack(core.Stack):
 
     # Example automatically generated without compilation. See https://github.com/aws/jsii/issues/82
     test_jobDef = batch.JobDefinition(self, "MyJobDef",
-        job_definition_name="MyCDKJobDefinition",
+        job_definition_name="MyCDKJobDef",
         container=batch.JobDefinitionContainer(image=ecs.ContainerImage.from_registry("amazon/amazonlinux2"),command=["sleep", "900"],memory_limit_mib=1024, vcpus=256),
     ) 
     self.task_job = _sfn_tasks.BatchSubmitJob(self, "Submit Job",
@@ -58,6 +82,7 @@ class TestStack(core.Stack):
     # Creating state machine
     self.statemachine = _sfn.StateMachine(
             self, "StateMachine",
+            state_machine_name="my_state_machine",
             definition = self.task_job.next(_sfn.Choice(self, "Job Complete?").when(_sfn.Condition.string_equals("$.status", "FAILED"), self.task2).when(_sfn.Condition.string_equals("$.status", "SUCCEEDED"), self.task1)),
             # next(self.task1),
         # catch_props={

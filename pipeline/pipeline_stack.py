@@ -2,20 +2,23 @@ from aws_cdk import (core, aws_codebuild as codebuild,
                      aws_codecommit as codecommit,
                      aws_codepipeline as codepipeline,
                      aws_codepipeline_actions as codepipeline_actions,
-
+                     aws_stepfunctions as _sfn,
                      aws_ec2 as ec2, 
                      aws_lambda as lambda_,
                      aws_iam as _iam)
 import json
+
+from aws_cdk.aws_servicediscovery import NamespaceType
 class PipelineStack(core.Stack):
 
-    def __init__(self, scope: core.Construct, id: str, *, repo_name: str=None, **kwargs) -> None:
+    def __init__(self, scope: core.Construct, id: str, *, repo_name: str = None, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
         
         # Example automatically generated without compilation. See https://github.com/aws/jsii/issues/826
         vpc = ec2.Vpc(self, "VPC")
         self.vpc = vpc
-
+        myprivate_subnet = vpc.select_subnets(subnet_type=ec2.SubnetType.PRIVATE)
+        # print(myprivate_subnet.subnet_ids[0])
         core.CfnOutput(self, "MyBatchVPC", value=vpc.vpc_id, export_name="mybatchamivpc")
 
         code = codecommit.Repository.from_repository_name(self, "ImportedRepo",
@@ -28,29 +31,32 @@ class PipelineStack(core.Stack):
         with open ("packer/policy_doc.json", "r") as policydoc:
             packer_policy=policydoc.read()
         
+        #Convert policy into dictonary format. 
         codebuild_packer_policy = json.loads(packer_policy)
-        antcorn = _iam.PolicyDocument.from_json(codebuild_packer_policy)
-        # custom_policy_document = _iam.PolicyDocument.from_json(json.dumps(json.dumps(packer_policy))
-        # my_policy = _iam.PolicyDocument(self, "PolicyDocument", statements=packer_policy)
-        codebuild_managed_policy = _iam.ManagedPolicy(self, "CodeBuildManagedPolicy",document=antcorn,managed_policy_name="CodeBuildPolicy")
+        codebuild_policy_doc = _iam.PolicyDocument.from_json(codebuild_packer_policy)
+        
+        codebuild_managed_policy =_iam.ManagedPolicy(self, "CodeBuildManagedPolicy",document=codebuild_policy_doc,managed_policy_name="CodeBuildPolicy")
         #Instance for packer tool 
         instance_role = _iam.Role(self, "PackerInstanceRole",
                         assumed_by=_iam.ServicePrincipal("ec2.amazonaws.com"),
                         managed_policies=[_iam.ManagedPolicy.from_aws_managed_policy_name("AmazonS3ReadOnlyAccess")])
+        
+        #Create Instance Profile
+        instance_profile = _iam.CfnInstanceProfile(self, "MyInstanceProfile",roles=[instance_role.role_name], instance_profile_name="BatchInstanceProfile")
         #CodeBuild Role with packer policy.
         codebuild_role = _iam.Role(self,"CodeBuildRole",
                             assumed_by=_iam.ServicePrincipal("codebuild.amazonaws.com"),
                             managed_policies=[_iam.ManagedPolicy.from_aws_managed_policy_name("AWSCodeBuildAdminAccess"),
-                                              _iam.ManagedPolicy.from_managed_policy_name(self, "ManagedPolicyCodeBuild", managed_policy_name="CodeBuildPolicy")
+                                            #   _iam.ManagedPolicy.from_managed_policy_name(self, "ManagedPolicyCodeBuild", managed_policy_name="CodeBuildPolicy"),
+                                              _iam.ManagedPolicy.from_managed_policy_arn(self, "MyCustomPolicy", managed_policy_arn=codebuild_managed_policy.managed_policy_arn)
                                                ])
      
         #CodeBuild Project to build custom AMI using packer tool. 
         custom_ami_build = codebuild.PipelineProject(self, "CustomAMIBuild",
+                        role=codebuild_role,
                         build_spec=codebuild.BuildSpec.from_source_filename(build_spec),
-                        environment_variables={"NAMETAG": codebuild.BuildEnvironmentVariable(value="Ver1"),
-                                                "VPCID": codebuild.BuildEnvironmentVariable(value=vpc.vpc_id),
-                                                "SubnetIds":codebuild.BuildEnvironmentVariable(value=vpc.private_subnets.pop()),
-                                                "InstanceIAMRole":codebuild.BuildEnvironmentVariable(value=instance_role)},
+                        environment_variables={"NAMETAG": codebuild.BuildEnvironmentVariable(value="BatchAMI1"),
+                                                "InstanceIAMRole":codebuild.BuildEnvironmentVariable(value=instance_profile.instance_profile_name)},
                         environment=dict(build_image=codebuild.LinuxBuildImage.from_code_build_image_id("aws/codebuild/standard:5.0")))
 
         batch_build = codebuild.PipelineProject(self, "BatchBuild",
@@ -71,8 +77,7 @@ class PipelineStack(core.Stack):
                                 "files": [
                                     "BatchStack.template.json",
                                     "TestStack.template.json"]},
-                            environment=dict(buildImage=
-                                codebuild.LinuxBuildImage.STANDARD_2_0))))
+                            environment=dict(buildImage=codebuild.LinuxBuildImage.STANDARD_2_0))))
 
 
         source_output = codepipeline.Artifact()
@@ -95,13 +100,14 @@ class PipelineStack(core.Stack):
                             project=batch_build,
                             input=source_output,
                             run_order=2,
-                            outputs=[batch_build_output])
-                        # codepipeline_actions.CodeBuildAction(
-                        #     action_name="CustomAMI_Build",
-                        #     project=custom_ami_build,
-                        #     run_order=1,
-                        #     input=source_output,
-                        #     outputs=[custom_ami_build_output])
+                            outputs=[batch_build_output]),
+                        codepipeline_actions.CodeBuildAction(
+                            action_name="CustomAMI_Build",
+                            variables_namespace="BuildVariables",
+                            project=custom_ami_build,
+                            run_order=1,
+                            input=source_output,
+                            outputs=[custom_ami_build_output])
                         ]),
                 codepipeline.StageProps(stage_name="Test",
                     actions=[
@@ -113,9 +119,20 @@ class PipelineStack(core.Stack):
                               ),
                               run_order=1,
                               stack_name="TestDeployStack",
+                              parameter_overrides={"ImageId":"#{BuildVariables.AMIID}","TestEnv":"#{BuildVariables.TestEnv}"},
                               admin_permissions=True,
-                              extra_inputs=[batch_build_output]
+                              extra_inputs=[custom_ami_build_output,batch_build_output]
                               )]
+                            ),
+                codepipeline.StageProps(stage_name="Step",
+                    actions=[
+                        codepipeline_actions.StepFunctionInvokeAction(
+                            action_name="Invoke",
+                            state_machine="my_state_machine",
+                            input=source_output,
+                            # state_machine_input=source_output
+                            # state_machine_input=codepipeline_actions.StateMachineInput.literal(IsHelloWorldExample=True)
+                            )]
                             ),
                 codepipeline.StageProps(stage_name="FinalStack",
                     actions=[
@@ -129,13 +146,10 @@ class PipelineStack(core.Stack):
                               ),
                               run_order=2,
                               stack_name="BatchDeployStack",
+                              parameter_overrides={"ImageId":"#{BuildVariables.AMIID}","MainEnv":"#{BuildVariables.MainEnv}"},
                               admin_permissions=True,
-                              extra_inputs=[batch_build_output]
+                              extra_inputs=[custom_ami_build_output,batch_build_output]
                               )]
                             )  
                 ]
             )
-
-        # core.Tag.add(vpc, "Project", "Batch Custom AMI VPC")
-        # core.Tag.add(code,"Project", "Batch Custom AMI Code")
-        # core.Tag.add(batch_build, "Project", "Batch Custom ami build")

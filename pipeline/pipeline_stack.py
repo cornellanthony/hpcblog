@@ -13,27 +13,17 @@ from aws_cdk.aws_servicediscovery import NamespaceType
 
 class PipelineStack(core.Stack):
 
-    def __init__(self, scope: core.Construct, id: str, *, repo_name: str = None, state_machine: str = None, **kwargs) -> None:
+    def __init__(self, scope: core.Construct, id: str, *, 
+                                            repo_name: str = None, 
+                                            state_machine: str = None, 
+                                            **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
-
-        # Example automatically generated without compilation. See https://github.com/aws/jsii/issues/826
-        # vpc = ec2.Vpc(self, "VPC")
-        # self.vpc = vpc
-        # myprivate_subnet = vpc.select_subnets(subnet_type=ec2.SubnetType.PRIVATE)
-        # print(myprivate_subnet.subnet_ids[0])
-        # core.CfnOutput(self, "MyBatchVPC", value=vpc.vpc_id,
-        #                export_name="mybatchamivpc")
 
         code = codecommit.Repository.from_repository_name(self, "ImportedRepo",
                                                           repo_name)
 
         my_statemc_arn = "arn:aws:states:*:*:stateMachine:" + state_machine
-        print(my_statemc_arn)
         my_statemachine = _sfn.StateMachine.from_state_machine_arn(self, "MyStateMachine", state_machine_arn = my_statemc_arn)
-        # Read CodeBuild buildspec.yaml file.
-        with open("packer/buildspec.yml", "r") as myfile:
-            build_spec = myfile.read()
-
         # Policy Document.
         with open("packer/policy_doc.json", "r") as policydoc:
             packer_policy = policydoc.read()
@@ -59,10 +49,31 @@ class PipelineStack(core.Stack):
                                    assumed_by=_iam.ServicePrincipal(
                                        "codebuild.amazonaws.com"),
                                    managed_policies=[_iam.ManagedPolicy.from_aws_managed_policy_name("AWSCodeBuildAdminAccess"),
-                                                     #   _iam.ManagedPolicy.from_managed_policy_name(self, "ManagedPolicyCodeBuild", managed_policy_name="CodeBuildPolicy"),
                                                      _iam.ManagedPolicy.from_managed_policy_arn(
                                        self, "MyCustomPolicy", managed_policy_arn=codebuild_managed_policy.managed_policy_arn)
                                    ])
+
+        # CodePipeline Policy document.
+        with open("packer/pipeline_policy.json", "r") as cd_policydoc:
+            codepipeline_policy = cd_policydoc.read()
+        
+       # Convert policy into dictonary format.
+        codepipeline_iam_policy = json.loads(codepipeline_policy)
+        codepipeline_policy_doc = _iam.PolicyDocument.from_json(codepipeline_iam_policy)
+        codepipeline_managed_policy = _iam.ManagedPolicy(
+            self, "CodePipelineManagedPolicy", document=codepipeline_policy_doc, managed_policy_name="CodePipelinePolicy")
+        # CodeBuild Role with packer policy.
+        codepipeline_role = _iam.Role(self, "CodePipelineRole",
+                                   assumed_by=_iam.ServicePrincipal(
+                                       "codepipeline.amazonaws.com"),
+                                   managed_policies=[_iam.ManagedPolicy.from_aws_managed_policy_name("AWSCodeBuildAdminAccess"),
+                                                     _iam.ManagedPolicy.from_aws_managed_policy_name("AWSCodeCommitFullAccess"), 
+                                                     _iam.ManagedPolicy.from_managed_policy_arn(
+                                       self, "MyCPPolicy", managed_policy_arn=codepipeline_managed_policy.managed_policy_arn)
+                                   ]) 
+        # Read CodeBuild buildspec.yaml file.
+        with open("packer/buildspec.yml", "r") as myfile:
+            build_spec = myfile.read()
 
         # CodeBuild Project to build custom AMI using packer tool.
         custom_ami_build = codebuild.PipelineProject(self, "CustomAMIBuild",
@@ -100,6 +111,7 @@ class PipelineStack(core.Stack):
         custom_ami_build_output = codepipeline.Artifact("CustomAMIBuildOutput")
 
         codepipeline.Pipeline(self, "Pipeline",
+            role=codepipeline_role,
             stages=[
                 codepipeline.StageProps(stage_name="Source",
                     actions=[
@@ -143,10 +155,7 @@ class PipelineStack(core.Stack):
                     actions=[
                         codepipeline_actions.StepFunctionInvokeAction(
                             action_name="Invoke",
-                            state_machine=my_statemachine,
-                            # input=source_output,
-                            # state_machine_input=source_output
-                            # state_machine_input=codepipeline_actions.StateMachineInput.literal(IsHelloWorldExample=True)
+                            state_machine=my_statemachine
                             )]
                             ),
                 codepipeline.StageProps(stage_name="FinalStack",

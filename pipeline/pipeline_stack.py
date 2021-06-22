@@ -27,7 +27,8 @@ class PipelineStack(core.Stack):
         code = codecommit.Repository.from_repository_name(self, "ImportedRepo",
                                                           repo_name)
 
-        my_statemc_arn = "arn:aws:states:*:*:stateMachine:" + str(state_machine)
+        my_statemc_arn = "arn:aws:states:*:*:stateMachine:" + state_machine
+        print(my_statemc_arn)
         my_statemachine = _sfn.StateMachine.from_state_machine_arn(self, "MyStateMachine", state_machine_arn = my_statemc_arn)
         # Read CodeBuild buildspec.yaml file.
         with open("packer/buildspec.yml", "r") as myfile:
@@ -84,7 +85,8 @@ class PipelineStack(core.Stack):
                                                             ]),
                                                         build=dict(commands=[
                                                             "npx cdk synth -o dist",
-                                                            "ls -l dist/BatchStack.template.json"])),
+                                                            "npx cdk deploy VpcStack --require-approval never"
+                                                            ])),
                                                     artifacts={
                                                         "base-directory": "dist",
                                                         "files": [
@@ -142,7 +144,6 @@ class PipelineStack(core.Stack):
                     actions=[
                         codepipeline_actions.StepFunctionInvokeAction(
                             action_name="Invoke",
-                            # state_machine=_sfn.StateMachine.from_state_machine_arn(self, "MyMachine", )
                             state_machine=my_statemachine,
                             # input=source_output,
                             # state_machine_input=source_output

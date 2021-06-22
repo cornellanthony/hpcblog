@@ -84,8 +84,7 @@ class PipelineStack(core.Stack):
                                                                 "python -m pip install -r requirements.txt"
                                                             ]),
                                                         build=dict(commands=[
-                                                            "npx cdk synth -o dist",
-                                                            "npx cdk deploy VpcStack --require-approval never"
+                                                            "npx cdk synth -o dist"
                                                             ])),
                                                     artifacts={
                                                         "base-directory": "dist",

@@ -13,7 +13,7 @@ from aws_cdk import (
 
 
 class TestStack(core.Stack):
-    def __init__(self, app: core.App, id: str, vpc, **kwargs):
+    def __init__(self, app: core.App, id: str, vpc, state_machine: str = None, **kwargs):
         super().__init__(app, id, **kwargs)
         # Parameters
         ImageId = core.CfnParameter(self, "ImageId", type="String",
@@ -81,7 +81,7 @@ class TestStack(core.Stack):
                                            )
         self.statemachine = _sfn.StateMachine(
             self, "StateMachine",
-            state_machine_name="my_state_machine",
+            state_machine_name=state_machine,
             definition=self.task_job.next(self.task1),
             # catch_props={
             #     "ErrorEquals": [ "States.ALL" ],
@@ -90,6 +90,6 @@ class TestStack(core.Stack):
 
             timeout=core.Duration.hours(1),
         )
-        self.machinename = self.statemachine.state_machine_name
-        core.CfnOutput(self, "MyStepFunction", value=self.statemachine.state_machine_name,
-                       export_name="mysfunction")
+        # self.machinename = self.statemachine.state_machine_name
+        # core.CfnOutput(self, "MyStepFunction", value=self.statemachine.state_machine_name,
+        #                export_name="mysfunction")

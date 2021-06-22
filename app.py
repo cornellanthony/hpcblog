@@ -8,7 +8,7 @@ from pipeline.batch_stack import BatchStack
 from pipeline.vpc_stack import VpcStack
 
 CODECOMMIT_REPO_NAME = "pipeline"
-STATE_MACHINE = "myStateMachine"
+STATE_MACHINE = "my_state_machine"
 app = core.App()
 
 # lambda_stack = LambdaStack(app, "LambdaStack")
@@ -19,7 +19,7 @@ app = core.App()
 vpc_stack = VpcStack(app, "VpcStack")
 pipeline_stack = PipelineStack(
     app, "PipelineCustomAMIStack", repo_name=CODECOMMIT_REPO_NAME, state_machine=STATE_MACHINE)
-test_stack = TestStack(app, "TestStack", vpc=vpc_stack.vpc)
+test_stack = TestStack(app, "TestStack", vpc=vpc_stack.vpc, state_machine=STATE_MACHINE)
 batch_stack = BatchStack(app, "BatchStack", vpc=vpc_stack.vpc)
 core.Tag.add(app, key="Project", value="Batch Custom AMI Resource")
 # launch_stack = MyProjectStack(app, "MyProjectStack")

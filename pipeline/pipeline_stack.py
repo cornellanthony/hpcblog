@@ -26,6 +26,9 @@ class PipelineStack(core.Stack):
 
         code = codecommit.Repository.from_repository_name(self, "ImportedRepo",
                                                           repo_name)
+
+        my_statemc_arn = "arn:aws:states:*:*:stateMachine:" + str(state_machine)
+        my_statemachine = _sfn.StateMachine.from_state_machine_arn(self, "MyStateMachine", state_machine_arn = my_statemc_arn)
         # Read CodeBuild buildspec.yaml file.
         with open("packer/buildspec.yml", "r") as myfile:
             build_spec = myfile.read()
@@ -140,7 +143,7 @@ class PipelineStack(core.Stack):
                         codepipeline_actions.StepFunctionInvokeAction(
                             action_name="Invoke",
                             # state_machine=_sfn.StateMachine.from_state_machine_arn(self, "MyMachine", )
-                            state_machine=state_machine,
+                            state_machine=my_statemachine,
                             # input=source_output,
                             # state_machine_input=source_output
                             # state_machine_input=codepipeline_actions.StateMachineInput.literal(IsHelloWorldExample=True)

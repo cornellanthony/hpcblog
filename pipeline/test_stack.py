@@ -86,8 +86,10 @@ class TestStack(core.Stack):
             # catch_props={
             #     "ErrorEquals": [ "States.ALL" ],
             #     "Next": self.task2
-            # },
+            # },    
 
             timeout=core.Duration.hours(1),
         )
-
+        self.machinename = self.statemachine.state_machine_name
+        core.CfnOutput(self, "MyStepFunction", value=self.statemachine.state_machine_name,
+                       export_name="mysfunction")

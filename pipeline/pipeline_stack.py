@@ -13,16 +13,16 @@ from aws_cdk.aws_servicediscovery import NamespaceType
 
 class PipelineStack(core.Stack):
 
-    def __init__(self, scope: core.Construct, id: str, *, repo_name: str = None, **kwargs) -> None:
+    def __init__(self, scope: core.Construct, id: str, *, repo_name: str = None, state_machine: str = None, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
         # Example automatically generated without compilation. See https://github.com/aws/jsii/issues/826
-        vpc = ec2.Vpc(self, "VPC")
-        self.vpc = vpc
+        # vpc = ec2.Vpc(self, "VPC")
+        # self.vpc = vpc
         # myprivate_subnet = vpc.select_subnets(subnet_type=ec2.SubnetType.PRIVATE)
         # print(myprivate_subnet.subnet_ids[0])
-        core.CfnOutput(self, "MyBatchVPC", value=vpc.vpc_id,
-                       export_name="mybatchamivpc")
+        # core.CfnOutput(self, "MyBatchVPC", value=vpc.vpc_id,
+        #                export_name="mybatchamivpc")
 
         code = codecommit.Repository.from_repository_name(self, "ImportedRepo",
                                                           repo_name)
@@ -88,6 +88,8 @@ class PipelineStack(core.Stack):
                                                             "BatchStack.template.json",
                                                             "TestStack.template.json"]},
                                                     environment=dict(buildImage=codebuild.LinuxBuildImage.STANDARD_2_0))))
+        
+     
 
         source_output = codepipeline.Artifact()
         batch_build_output = codepipeline.Artifact("BatchBuildOutput")
@@ -137,8 +139,9 @@ class PipelineStack(core.Stack):
                     actions=[
                         codepipeline_actions.StepFunctionInvokeAction(
                             action_name="Invoke",
-                            state_machine="my_state_machine",
-                            input=source_output,
+                            # state_machine=_sfn.StateMachine.from_state_machine_arn(self, "MyMachine", )
+                            state_machine=state_machine,
+                            # input=source_output,
                             # state_machine_input=source_output
                             # state_machine_input=codepipeline_actions.StateMachineInput.literal(IsHelloWorldExample=True)
                             )]

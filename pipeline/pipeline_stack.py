@@ -104,7 +104,7 @@ class PipelineStack(core.Stack):
                     actions=[
                         codepipeline_actions.CodeCommitSourceAction(
                             action_name="CodeCommit_Source",
-                            branch="antcorne",
+                            branch="main",
                             repository=code,
                             output=source_output)]),
                 codepipeline.StageProps(stage_name="Build",

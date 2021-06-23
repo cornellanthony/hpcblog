@@ -51,7 +51,7 @@ class TestStack(core.Stack):
         test_jobDef = _batch.JobDefinition(self, "MyJobDef",
                                            job_definition_name="MyCDKJobDef",
                                            container=_batch.JobDefinitionContainer(image=ecs.ContainerImage.from_registry(
-                                               "public.ecr.aws/amazonlinux/amazonlinux:latest"), command=["sleep", "900"], memory_limit_mib=256, vcpus=2),
+                                               "public.ecr.aws/amazonlinux/amazonlinux:latest"), command=["sleep", "60"], memory_limit_mib=256, vcpus=2),
                                            )
         self.task_job = _sfn_tasks.BatchSubmitJob(self, "Submit Job",
                                                   job_definition_arn=test_jobDef.job_definition_arn,

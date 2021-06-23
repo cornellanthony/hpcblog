@@ -82,7 +82,8 @@
                 "states:SendTaskHeartbeat",
                 "states:SendTaskSuccess",
                 "states:StartExecution",
-                "states:TagResource"
+                "states:TagResource",
+                "stepfunctions:DescribeStateMachine"
             ],
             "Resource": [
                 "arn:aws:states:*:*:stateMachine:my_state_machine"

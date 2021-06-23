@@ -82,11 +82,10 @@
                 "states:SendTaskHeartbeat",
                 "states:SendTaskSuccess",
                 "states:StartExecution",
-                "states:TagResource",
-                "stepfunctions:DescribeStateMachine"
+                "states:TagResource"
             ],
             "Resource": [
-                "arn:aws:states:*:*:stateMachine:my_state_machine"
+                "*"
             ],
             "Effect": "Allow"
         }

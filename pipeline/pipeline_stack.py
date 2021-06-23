@@ -62,7 +62,8 @@ class PipelineStack(core.Stack):
         codepipeline_policy_doc = _iam.PolicyDocument.from_json(codepipeline_iam_policy)
         codepipeline_managed_policy = _iam.ManagedPolicy(
             self, "CodePipelineManagedPolicy", document=codepipeline_policy_doc, managed_policy_name="CodePipelinePolicy")
-        # CodeBuild Role with packer policy.
+
+        # CodePipeline Service IAM Role.
         codepipeline_role = _iam.Role(self, "CodePipelineRole",
                                    assumed_by=_iam.ServicePrincipal(
                                        "codepipeline.amazonaws.com"),
@@ -155,7 +156,8 @@ class PipelineStack(core.Stack):
                     actions=[
                         codepipeline_actions.StepFunctionInvokeAction(
                             action_name="Invoke",
-                            state_machine=my_statemachine
+                            state_machine=my_statemachine,
+                            role=codepipeline_role
                             )]
                             ),
                 codepipeline.StageProps(stage_name="FinalStack",

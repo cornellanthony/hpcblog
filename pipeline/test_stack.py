@@ -11,11 +11,11 @@ from aws_cdk import (
     core
 )
 
+
 class TestStack(core.Stack):
     def __init__(self, app: core.App, id: str, vpc, state_machine: str = None, **kwargs):
         super().__init__(app, id, **kwargs)
 
-        
         # Parameters
         ImageId = core.CfnParameter(self, "ImageId", type="String",
                                     description="This is Custom AMI ID")
@@ -58,7 +58,7 @@ class TestStack(core.Stack):
                                                   job_name="MyJob",
                                                   job_queue_arn=test_queue.job_queue_arn
                                                   )
-        # self.Job_String_Split = _sfn.Task(
+        # self.Job_String_Split = _sfn.Task(git
         #         self,"String_Split",
         #         # input_path = "$.TaskInfo",
         #         # result_path = "$.JobDetail.String_Split",
@@ -80,14 +80,15 @@ class TestStack(core.Stack):
                                            message=_sfn.TaskInput.from_data_at(
                                                "$.message")
                                            )
+        definition = self.task_job.next(_sfn.Choice(self, "Job Complete?").when(_sfn.Condition.string_equals("$.status", "FAILED"), self.task2).when(_sfn.Condition.string_equals("$.status", "SUCCEEDED"), self.task1))
         self.statemachine = _sfn.StateMachine(
             self, "StateMachine",
             state_machine_name=state_machine,
-            definition=self.task_job.next(self.task1),
+            definition=definition,
             # catch_props={
             #     "ErrorEquals": [ "States.ALL" ],
             #     "Next": self.task2
-            # },    
+            # },
 
             timeout=core.Duration.hours(1),
         )

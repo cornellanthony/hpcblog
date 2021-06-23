@@ -9,8 +9,6 @@ from aws_cdk import (core, aws_codebuild as codebuild,
 import json
 
 from aws_cdk.aws_servicediscovery import NamespaceType
-
-
 class PipelineStack(core.Stack):
 
     def __init__(self, scope: core.Construct, id: str, *, 
@@ -22,7 +20,8 @@ class PipelineStack(core.Stack):
         code = codecommit.Repository.from_repository_name(self, "ImportedRepo",
                                                           repo_name)
 
-        my_statemc_arn = "arn:aws:states:*:*:stateMachine:" + state_machine
+        my_statemc_arn = "arn:aws:states:" + self.region + ":" + self.account + ":stateMachine:" + state_machine
+        print(my_statemc_arn)
         my_statemachine = _sfn.StateMachine.from_state_machine_arn(self, "MyStateMachine", state_machine_arn = my_statemc_arn)
         # Policy Document.
         with open("packer/policy_doc.json", "r") as policydoc:
@@ -67,7 +66,7 @@ class PipelineStack(core.Stack):
         codepipeline_role = _iam.Role(self, "CodePipelineRole",
                                    assumed_by=_iam.ServicePrincipal(
                                        "codepipeline.amazonaws.com"),
-                                   managed_policies=[_iam.ManagedPolicy.from_aws_managed_policy_name("AWSCodeBuildAdminAccess"),
+                                   managed_policies=[_iam.ManagedPolicy.from_aws_managed_policy_name("AWSStepFunctionsFullAccess"),
                                                      _iam.ManagedPolicy.from_aws_managed_policy_name("AWSCodeCommitFullAccess"), 
                                                      _iam.ManagedPolicy.from_managed_policy_arn(
                                        self, "MyCPPolicy", managed_policy_arn=codepipeline_managed_policy.managed_policy_arn)

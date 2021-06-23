@@ -8,13 +8,15 @@ from aws_cdk import (
     aws_ec2 as ec2,
     # aws_ecr as ecr,
     aws_ecs as ecs,
-    core,
+    core
 )
-
+from aws_cdk.core import Aws
 
 class TestStack(core.Stack):
     def __init__(self, app: core.App, id: str, vpc, state_machine: str = None, **kwargs):
         super().__init__(app, id, **kwargs)
+
+        print(Aws.ACCOUNT_ID)
         # Parameters
         ImageId = core.CfnParameter(self, "ImageId", type="String",
                                     description="This is Custom AMI ID")
@@ -50,7 +52,7 @@ class TestStack(core.Stack):
         test_jobDef = _batch.JobDefinition(self, "MyJobDef",
                                            job_definition_name="MyCDKJobDef",
                                            container=_batch.JobDefinitionContainer(image=ecs.ContainerImage.from_registry(
-                                               "amazon/amazonlinux2"), command=["sleep", "900"], memory_limit_mib=1024, vcpus=256),
+                                               "amazon/amazonlinux2"), command=["sleep", "900"], memory_limit_mib=1024, vcpus=1),
                                            )
         self.task_job = _sfn_tasks.BatchSubmitJob(self, "Submit Job",
                                                   job_definition_arn=test_jobDef.job_definition_arn,

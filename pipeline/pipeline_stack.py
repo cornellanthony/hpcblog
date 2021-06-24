@@ -138,7 +138,6 @@ class PipelineStack(core.Stack):
                         ]),
                 codepipeline.StageProps(stage_name="Test",
                     actions=[
-                        
                         codepipeline_actions.CloudFormationCreateUpdateStackAction(
                               action_name="Batch_CFN_Deploy",
                               template_path=batch_build_output.at_path(
@@ -148,16 +147,25 @@ class PipelineStack(core.Stack):
                               stack_name="TestDeployStack",
                               parameter_overrides={"ImageId":"#{BuildVariables.AMIID}","TestEnv":"#{BuildVariables.TestEnv}"},
                               admin_permissions=True,
+                              replace_on_failure=True,
                               extra_inputs=[custom_ami_build_output,batch_build_output]
-                              )]
-                            ),
-                codepipeline.StageProps(stage_name="Step",
-                    actions=[
+                              ),
                         codepipeline_actions.StepFunctionInvokeAction(
                             action_name="Invoke",
                             state_machine=my_statemachine,
-                            role=codepipeline_role
-                            )]
+                            role=codepipeline_role,
+                            run_order=2
+                            ),
+                        codepipeline_actions.CloudFormationDeleteStackAction(
+                              action_name="Delete_TestEnv",
+                              run_order=3,
+                              stack_name="TestDeployStack",
+                              admin_permissions=True,
+                            #   parameter_overrides={"ImageId":"#{BuildVariables.AMIID}","TestEnv":"#{BuildVariables.TestEnv}"},
+                            #   admin_permissions=True,
+                            #   extra_inputs=[custom_ami_build_output,batch_build_output]
+                              )
+                            ]
                             ),
                 codepipeline.StageProps(stage_name="FinalStack",
                     actions=[

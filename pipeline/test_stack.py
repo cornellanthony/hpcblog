@@ -73,14 +73,14 @@ class TestStack(core.Stack):
         self.task1 = _sfn_tasks.SnsPublish(self, "Publish_suceeded",
                                            topic=topic,
                                            message=_sfn.TaskInput.from_data_at(
-                                               "$.message")
+                                               "$.StatusReason")
                                            )
         self.task2 = _sfn_tasks.SnsPublish(self, "Publish_failed",
                                            topic=topic,
                                            message=_sfn.TaskInput.from_data_at(
-                                               "$.message")
+                                               "$.StatusReason")
                                            )
-        definition = self.task_job.next(_sfn.Choice(self, "Job Complete?").when(_sfn.Condition.string_equals("$.input.status", "FAILED"), self.task2).when(_sfn.Condition.string_equals("$.input.status", "SUCCEEDED"), self.task1))
+        definition = self.task_job.next(_sfn.Choice(self, "Job Complete?").when(_sfn.Condition.string_equals("$.Status", "FAILED"), self.task2).when(_sfn.Condition.string_equals("$.Status", "SUCCEEDED"), self.task1))
         self.statemachine = _sfn.StateMachine(
             self, "StateMachine",
             state_machine_name=state_machine,

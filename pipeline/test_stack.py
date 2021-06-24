@@ -80,7 +80,7 @@ class TestStack(core.Stack):
                                            message=_sfn.TaskInput.from_data_at(
                                                "$.message")
                                            )
-        definition = self.task_job.next(_sfn.Choice(self, "Job Complete?").when(_sfn.Condition.string_equals("$.status", "FAILED"), self.task2).when(_sfn.Condition.string_equals("$.status", "SUCCEEDED"), self.task1))
+        definition = self.task_job.next(_sfn.Choice(self, "Job Complete?").when(_sfn.Condition.string_equals("$.input.status", "FAILED"), self.task2).when(_sfn.Condition.string_equals("$.input.status", "SUCCEEDED"), self.task1))
         self.statemachine = _sfn.StateMachine(
             self, "StateMachine",
             state_machine_name=state_machine,

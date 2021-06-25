@@ -33,7 +33,7 @@ class PipelineStack(core.Stack):
             codebuild_packer_policy)
 
         codebuild_managed_policy = _iam.ManagedPolicy(
-            self, "CodeBuildManagedPolicy", document=codebuild_policy_doc, managed_policy_name="CodeBuildPolicy")
+            self, "CodeBuildManagedPolicy", document=codebuild_policy_doc)
         # Instance for packer tool
         instance_role = _iam.Role(self, "PackerInstanceRole",
                                   assumed_by=_iam.ServicePrincipal(
@@ -42,7 +42,7 @@ class PipelineStack(core.Stack):
 
         # Create Instance Profile
         instance_profile = _iam.CfnInstanceProfile(self, "MyInstanceProfile", roles=[
-                                                   instance_role.role_name], instance_profile_name="BatchInstanceProfile")
+                                                   instance_role.role_name], instance_profile_name=str("BatchInstanceProfile"+self.region))
         # CodeBuild Role with packer policy.
         codebuild_role = _iam.Role(self, "CodeBuildRole",
                                    assumed_by=_iam.ServicePrincipal(
@@ -60,7 +60,7 @@ class PipelineStack(core.Stack):
         codepipeline_iam_policy = json.loads(codepipeline_policy)
         codepipeline_policy_doc = _iam.PolicyDocument.from_json(codepipeline_iam_policy)
         codepipeline_managed_policy = _iam.ManagedPolicy(
-            self, "CodePipelineManagedPolicy", document=codepipeline_policy_doc, managed_policy_name="CodePipelinePolicy")
+            self, "CodePipelineManagedPolicy", document=codepipeline_policy_doc)
 
         # CodePipeline Service IAM Role.
         codepipeline_role = _iam.Role(self, "CodePipelineRole",

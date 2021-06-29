@@ -1,14 +1,15 @@
-from aws_cdk import (core, aws_codebuild as codebuild,
-                     aws_codecommit as codecommit,
-                     aws_codepipeline as codepipeline,
-                     aws_codepipeline_actions as codepipeline_actions,
+from aws_cdk import (core, 
+                     aws_codebuild as _codebuild,
+                     aws_codecommit as _codecommit,
+                     aws_codepipeline as _codepipeline,
+                     aws_codepipeline_actions as _codepipeline_actions,
                      aws_stepfunctions as _sfn,
-                     aws_ec2 as ec2, 
-                     aws_lambda as lambda_,
+                    #  aws_ec2 as _ec2, 
+                    #  aws_lambda as _lambda_,
                      aws_iam as _iam)
 import json
 
-from aws_cdk.aws_servicediscovery import NamespaceType
+#from aws_cdk.aws_servicediscovery import NamespaceType
 class PipelineStack(core.Stack):
 
     def __init__(self, scope: core.Construct, id: str, *, 
@@ -17,12 +18,12 @@ class PipelineStack(core.Stack):
                                             **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        code = codecommit.Repository.from_repository_name(self, "ImportedRepo",
+        code = _codecommit.Repository.from_repository_name(self, "ImportedRepo",
                                                           repo_name)
 
-        my_statemc_arn = "arn:aws:states:" + self.region + ":" + self.account + ":stateMachine:" + state_machine
-        print(my_statemc_arn)
-        my_statemachine = _sfn.StateMachine.from_state_machine_arn(self, "MyStateMachine", state_machine_arn = my_statemc_arn)
+        my_state_machine_arn = "arn:aws:states:" + self.region + ":" + self.account + ":stateMachine:" + state_machine
+
+        my_statemachine = _sfn.StateMachine.from_state_machine_arn(self, "MyStateMachine", state_machine_arn = my_state_machine_arn)
         # Policy Document.
         with open("packer/policy_doc.json", "r") as policydoc:
             packer_policy = policydoc.read()
@@ -72,20 +73,20 @@ class PipelineStack(core.Stack):
                                        self, "MyCPPolicy", managed_policy_arn=codepipeline_managed_policy.managed_policy_arn)
                                    ]) 
         # Read CodeBuild buildspec.yaml file.
-        with open("packer/buildspec.yml", "r") as myfile:
-            build_spec = myfile.read()
+        with open("packer/buildspec.yml", "r") as file:
+            build_spec = file.read()
 
         # CodeBuild Project to build custom AMI using packer tool.
-        custom_ami_build = codebuild.PipelineProject(self, "CustomAMIBuild",
+        custom_ami_build = _codebuild.PipelineProject(self, "CustomAMIBuild",
                                                      role=codebuild_role,
-                                                     build_spec=codebuild.BuildSpec.from_source_filename(
+                                                     build_spec=_codebuild.BuildSpec.from_source_filename(
                                                          build_spec),
-                                                     environment_variables={"NAMETAG": codebuild.BuildEnvironmentVariable(value="BatchAMI1"),
-                                                                            "InstanceIAMRole": codebuild.BuildEnvironmentVariable(value=instance_profile.instance_profile_name)},
-                                                     environment=dict(build_image=codebuild.LinuxBuildImage.from_code_build_image_id("aws/codebuild/standard:5.0")))
+                                                     environment_variables={"NAMETAG": _codebuild.BuildEnvironmentVariable(value="BatchAMI1"),
+                                                                            "InstanceIAMRole": _codebuild.BuildEnvironmentVariable(value=instance_profile.instance_profile_name)},
+                                                     environment=dict(build_image=_codebuild.LinuxBuildImage.from_code_build_image_id("aws/codebuild/standard:5.0")))
 
-        batch_build = codebuild.PipelineProject(self, "BatchBuild",
-                                                build_spec=codebuild.BuildSpec.from_object(dict(
+        batch_build = _codebuild.PipelineProject(self, "BatchBuild",
+                                                build_spec=_codebuild.BuildSpec.from_object(dict(
                                                     version="0.2",
                                                     phases=dict(
                                                         install=dict(
@@ -102,33 +103,33 @@ class PipelineStack(core.Stack):
                                                         "files": [
                                                             "BatchStack.template.json",
                                                             "TestStack.template.json"]},
-                                                    environment=dict(buildImage=codebuild.LinuxBuildImage.STANDARD_2_0))))
+                                                    environment=dict(buildImage=_codebuild.LinuxBuildImage.STANDARD_2_0))))
         
      
 
-        source_output = codepipeline.Artifact()
-        batch_build_output = codepipeline.Artifact("BatchBuildOutput")
-        custom_ami_build_output = codepipeline.Artifact("CustomAMIBuildOutput")
+        source_output = _codepipeline.Artifact()
+        batch_build_output = _codepipeline.Artifact("BatchBuildOutput")
+        custom_ami_build_output = _codepipeline.Artifact("CustomAMIBuildOutput")
 
-        codepipeline.Pipeline(self, "Pipeline",
+        _codepipeline.Pipeline(self, "Pipeline",
             role=codepipeline_role,
             stages=[
-                codepipeline.StageProps(stage_name="Source",
+                _codepipeline.StageProps(stage_name="Source",
                     actions=[
-                        codepipeline_actions.CodeCommitSourceAction(
+                        _codepipeline_actions.CodeCommitSourceAction(
                             action_name="CodeCommit_Source",
                             branch="main",
                             repository=code,
                             output=source_output)]),
-                codepipeline.StageProps(stage_name="Build",
+                _codepipeline.StageProps(stage_name="Build",
                     actions=[
-                        codepipeline_actions.CodeBuildAction(
+                        _codepipeline_actions.CodeBuildAction(
                             action_name="Batch_Build",
                             project=batch_build,
                             input=source_output,
                             run_order=2,
                             outputs=[batch_build_output]),
-                        codepipeline_actions.CodeBuildAction(
+                        _codepipeline_actions.CodeBuildAction(
                             action_name="CustomAMI_Build",
                             variables_namespace="BuildVariables",
                             project=custom_ami_build,
@@ -136,9 +137,9 @@ class PipelineStack(core.Stack):
                             input=source_output,
                             outputs=[custom_ami_build_output])
                         ]),
-                codepipeline.StageProps(stage_name="Test",
+                _codepipeline.StageProps(stage_name="Test",
                     actions=[
-                        codepipeline_actions.CloudFormationCreateUpdateStackAction(
+                        _codepipeline_actions.CloudFormationCreateUpdateStackAction(
                               action_name="Batch_CFN_Deploy",
                               template_path=batch_build_output.at_path(
                                   "TestStack.template.json"
@@ -150,29 +151,26 @@ class PipelineStack(core.Stack):
                               replace_on_failure=True,
                               extra_inputs=[custom_ami_build_output,batch_build_output]
                               ),
-                        codepipeline_actions.StepFunctionInvokeAction(
+                        _codepipeline_actions.StepFunctionInvokeAction(
                             action_name="Invoke",
                             state_machine=my_statemachine,
                             role=codepipeline_role,
                             run_order=2
                             ),
-                        codepipeline_actions.CloudFormationDeleteStackAction(
+                        _codepipeline_actions.CloudFormationDeleteStackAction(
                               action_name="Delete_TestEnv",
                               run_order=3,
                               stack_name="TestDeployStack",
-                              admin_permissions=True,
-                            #   parameter_overrides={"ImageId":"#{BuildVariables.AMIID}","TestEnv":"#{BuildVariables.TestEnv}"},
-                            #   admin_permissions=True,
-                            #   extra_inputs=[custom_ami_build_output,batch_build_output]
-                              )
+                              admin_permissions=True
+                            )
                             ]
                             ),
-                codepipeline.StageProps(stage_name="FinalStack",
+                _codepipeline.StageProps(stage_name="FinalStack",
                     actions=[
-                        codepipeline_actions.ManualApprovalAction(
+                        _codepipeline_actions.ManualApprovalAction(
                                 action_name="ApproveChanges",
                                 run_order=1),
-                        codepipeline_actions.CloudFormationCreateUpdateStackAction(
+                        _codepipeline_actions.CloudFormationCreateUpdateStackAction(
                               action_name="Batch_CFN_Deploy",
                               template_path=batch_build_output.at_path(
                                   "BatchStack.template.json"

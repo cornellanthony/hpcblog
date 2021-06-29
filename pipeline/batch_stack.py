@@ -1,6 +1,9 @@
 # from pipeline.pipeline_stack import PipelineStack
-from aws_cdk import core, aws_batch as _batch, aws_ec2 as _ec2
+# from aws_cdk import core, aws_batch as _batch, aws_ec2 as _ec2
 
+from aws_cdk import (core, 
+                    aws_batch as _batch,
+                    aws_ec2 as _ec2)
 
 class BatchStack(core.Stack):
     def __init__(self, app: core.App, id: str, vpc, **kwargs):
@@ -15,8 +18,8 @@ class BatchStack(core.Stack):
             userdata = myfile.read()
         # Create launch template data using image id and userdata script.
         my_launch_data = _ec2.CfnLaunchTemplate.LaunchTemplateDataProperty(
-            image_id=ImageId.value_as_string,
-            user_data=core.Fn.base64(userdata))
+                                image_id=ImageId.value_as_string,
+                                user_data=core.Fn.base64(userdata))
         my_launch_template = _ec2.CfnLaunchTemplate(self, "BatchLaunchTemplate",
                                                     launch_template_name="batch-main-template",
                                                     launch_template_data=my_launch_data)

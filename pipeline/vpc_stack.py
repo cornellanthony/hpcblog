@@ -5,7 +5,7 @@ from aws_cdk import (core,
 
 class VpcStack(core.Stack):
 
-    def __init__(self, app: core.App, id: str, repo_name: str = None, **kwargs):
+    def __init__(self, app: core.App, id: str, **kwargs):
         super().__init__(app, id, **kwargs)
 
         # Create custom VPC for final Batch compute environment.

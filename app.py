@@ -7,7 +7,7 @@ from pipeline.batch_stack import BatchStack
 # from pipeline.launchstack import MyProjectStack
 from pipeline.vpc_stack import VpcStack
 
-CODECOMMIT_REPO_NAME = "mypipeline"
+CODECOMMIT_REPO_NAME = "pipeline"
 STATE_MACHINE = "my_state_machine"
 app = core.App()
 
@@ -16,7 +16,7 @@ app = core.App()
 # PipelineStack(app, "PipelineDeployingLambdaStack",
 #     # lambda_code=lambda_stack.lambda_code,
 #     repo_name=CODECOMMIT_REPO_NAME)
-vpc_stack = VpcStack(app, "VpcStack", repo_name=CODECOMMIT_REPO_NAME)
+vpc_stack = VpcStack(app, "VpcStack")
 pipeline_stack = PipelineStack(
     app, "PipelineCustomAMIStack", repo_name=CODECOMMIT_REPO_NAME, state_machine=STATE_MACHINE)
 test_stack = TestStack(app, "TestStack", vpc=vpc_stack.vpc, state_machine=STATE_MACHINE)

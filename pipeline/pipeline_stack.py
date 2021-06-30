@@ -18,13 +18,17 @@ class PipelineStack(core.Stack):
                                             **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
+        # Create CodeCommit repository instance. 
         code = _codecommit.Repository.from_repository_name(self, "ImportedRepo",
                                                           repo_name)
 
+        # Form the ARN using StateMachine name. 
         my_state_machine_arn = "arn:aws:states:" + self.region + ":" + self.account + ":stateMachine:" + state_machine
 
+        # Creat StateMachine instance from state machine Arn. 
         my_statemachine = _sfn.StateMachine.from_state_machine_arn(self, "MyStateMachine", state_machine_arn = my_state_machine_arn)
-        # Policy Document.
+
+        # Policy Document for Packer tool.
         with open("packer/policy_doc.json", "r") as policydoc:
             packer_policy = policydoc.read()
 
@@ -35,15 +39,17 @@ class PipelineStack(core.Stack):
 
         codebuild_managed_policy = _iam.ManagedPolicy(
             self, "CodeBuildManagedPolicy", document=codebuild_policy_doc)
-        # Instance for packer tool
+
+        # IAM role for packer tool
         instance_role = _iam.Role(self, "PackerInstanceRole",
                                   assumed_by=_iam.ServicePrincipal(
                                       "ec2.amazonaws.com"),
                                   managed_policies=[_iam.ManagedPolicy.from_aws_managed_policy_name("AmazonS3ReadOnlyAccess")])
 
-        # Create Instance Profile
+        # Create Instance Profile for Packer instance. 
         instance_profile = _iam.CfnInstanceProfile(self, "MyInstanceProfile", roles=[
                                                    instance_role.role_name], instance_profile_name=str("BatchInstanceProfile"+self.region))
+
         # CodeBuild Role with packer policy.
         codebuild_role = _iam.Role(self, "CodeBuildRole",
                                    assumed_by=_iam.ServicePrincipal(
@@ -85,6 +91,7 @@ class PipelineStack(core.Stack):
                                                                             "InstanceIAMRole": _codebuild.BuildEnvironmentVariable(value=instance_profile.instance_profile_name)},
                                                      environment=dict(build_image=_codebuild.LinuxBuildImage.from_code_build_image_id("aws/codebuild/standard:5.0")))
 
+        # Code Build project to synth Test and Batch final environment cloudformation template. 
         batch_build = _codebuild.PipelineProject(self, "BatchBuild",
                                                 build_spec=_codebuild.BuildSpec.from_object(dict(
                                                     version="0.2",
@@ -106,11 +113,13 @@ class PipelineStack(core.Stack):
                                                     environment=dict(buildImage=_codebuild.LinuxBuildImage.STANDARD_2_0))))
         
      
-
+        # Artificat instances. 
         source_output = _codepipeline.Artifact()
         batch_build_output = _codepipeline.Artifact("BatchBuildOutput")
         custom_ami_build_output = _codepipeline.Artifact("CustomAMIBuildOutput")
 
+
+        # Create CodePipeline. 
         _codepipeline.Pipeline(self, "Pipeline",
             role=codepipeline_role,
             stages=[
@@ -169,6 +178,7 @@ class PipelineStack(core.Stack):
                     actions=[
                         _codepipeline_actions.ManualApprovalAction(
                                 action_name="ApproveChanges",
+                                notify_emails=['telkarv@amazon.com'],
                                 run_order=1),
                         _codepipeline_actions.CloudFormationCreateUpdateStackAction(
                               action_name="Batch_CFN_Deploy",

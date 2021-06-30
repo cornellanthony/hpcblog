@@ -30,7 +30,7 @@ class TestStack(core.Stack):
             user_data=core.Fn.base64(userdata))
         my_launch_template = _ec2.CfnLaunchTemplate(self, "BatchLaunchTemplate", launch_template_name="batch-template",
                                                    launch_template_data=my_launch_data)
-        # default is managed
+        # Create Batch ComputeEnvironment using latest AMI version in Launch Template. 
         my_compute_environment = _batch.ComputeEnvironment(self, "AWS-Managed-Compute-Env",
                                                            compute_resources={
                                                                "launch_template": {"launch_template_name": my_launch_template.launch_template_name, "version": "$Latest"},
@@ -38,7 +38,7 @@ class TestStack(core.Stack):
                                                            },
                                                            compute_environment_name=TestEnv.value_as_string
                                                            )
-        # Example automatically generated without compilation. See https://github.com/aws/jsii/issues/826
+        # Create AWS Batch JobQueue and associate it with Test Compute Environment. 
         test_queue = _batch.JobQueue(self, "JobQueue",
                                      compute_environments=[
                                          _batch.JobQueueComputeEnvironment(
@@ -47,28 +47,19 @@ class TestStack(core.Stack):
                                          )
                                      ]
                                      )
-        # Example automatically generated without compilation. See https://github.com/aws/jsii/issues/82
+        # Create Job Definition to submit job in test job queue. 
         test_jobDef = _batch.JobDefinition(self, "MyJobDef",
                                            job_definition_name="MyCDKJobDef",
                                            container=_batch.JobDefinitionContainer(image=_ecs.ContainerImage.from_registry(
                                                "public.ecr.aws/amazonlinux/amazonlinux:latest"), command=["sleep", "60"], memory_limit_mib=256, vcpus=2),
                                            )
+        # Create Stepfunction submit job task.
         self.task_job = _sfn_tasks.BatchSubmitJob(self, "Submit Job",
                                                   job_definition_arn=test_jobDef.job_definition_arn,
                                                   job_name="MyJob",
                                                   job_queue_arn=test_queue.job_queue_arn
                                                   )
-        # self.Job_String_Split = _sfn.Task(git
-        #         self,"String_Split",
-        #         # input_path = "$.TaskInfo",
-        #         # result_path = "$.JobDetail.String_Split",
-        #         # output_path = "$",
-        #         task = _sfn_tasks.RunBatchJob(
-        #             job_name = "String_Split",
-        #             job_definition = test_jobDef,
-        #             job_queue = test_queue,
-        #         )
-        #     )
+
         topic = _sns.Topic(self, "Topic")
         self.task1 = _sfn_tasks.SnsPublish(self, "Publish_suceeded",
                                            topic=topic,

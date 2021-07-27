@@ -14,7 +14,8 @@ class PipelineStack(core.Stack):
 
     def __init__(self, scope: core.Construct, id: str, *, 
                                             repo_name: str = None, 
-                                            state_machine: str = None, 
+                                            state_machine: str = None,
+                                            approval_email: list = None,
                                             **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
@@ -120,7 +121,8 @@ class PipelineStack(core.Stack):
 
 
         # Create CodePipeline. 
-        _codepipeline.Pipeline(self, "Pipeline",
+        self.amicode_pipeline = _codepipeline.Pipeline(self, "Pipeline",
+            pipeline_name="MyPipeline",
             role=codepipeline_role,
             stages=[
                 _codepipeline.StageProps(stage_name="Source",
@@ -178,7 +180,7 @@ class PipelineStack(core.Stack):
                     actions=[
                         _codepipeline_actions.ManualApprovalAction(
                                 action_name="ApproveChanges",
-                                notify_emails=['telkarv@amazon.com'],
+                                notify_emails=approval_email,
                                 run_order=1),
                         _codepipeline_actions.CloudFormationCreateUpdateStackAction(
                               action_name="Batch_CFN_Deploy",
@@ -194,3 +196,6 @@ class PipelineStack(core.Stack):
                             )  
                 ]
             )
+
+        url_output= ['https://console.aws.amazon.com/codepipeline/home?region=', self.region, '#/view/MyPipeline' ]
+        core.CfnOutput(self, "PipelineOutput", value=("".join(url_output)))
